@@ -173,7 +173,7 @@ func (p *Parser) parseSimpleObject() (err error) {
 	return
 }
 func (p *Parser) parseXStringObject() (err error) {
-	var buf [20480]byte
+	var buf [1024*1024]byte
 	var nRead int
 	var nLen int64
 	if nLen, err = p.parseIntLine(); err != nil {
@@ -183,12 +183,13 @@ func (p *Parser) parseXStringObject() (err error) {
 		p.r.ReadRaw(buf[:])
 		return nil
 	}
-	if nRead, err = p.r.Read(buf[:]); err != nil {
-		return err
+	for nTotalRead := int64(0); nTotalRead < nLen; {
+	    if nRead, err = p.r.Read(buf[:]); err != nil {
+		    return err
+	    }
+	    p.w.Write(buf[:nRead])
+	    nTotalRead += int64(nRead)
 	}
-
-	//output
-	p.w.Write(buf[:nRead])
 	return
 }
 func (p *Parser) parseProcedureObject() (err error) {
